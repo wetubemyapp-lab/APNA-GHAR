@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Property } from '../types';
 import { useApp } from '../context/AppContext';
+import { SmartImage } from './SmartImage';
 import { 
   Heart, 
   CheckCircle2, 
@@ -103,11 +104,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
     >
       {/* 1. IMAGE AREA */}
       <div className="relative w-full aspect-[16/10] bg-slate-900 overflow-hidden">
-        <img 
+        <SmartImage 
           src={property.images[activeImageIdx] || property.images[0]} 
           alt={propertyTitle} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+          roundedClass="rounded-none"
         />
 
         {/* Gradient Scrim for readable badges */}

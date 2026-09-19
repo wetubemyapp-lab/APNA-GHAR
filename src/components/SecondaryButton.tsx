@@ -18,7 +18,8 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
   return (
     <button
       disabled={disabled || loading}
-      className={`px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200/80 text-sm font-extrabold transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none ${className}`}
+      aria-label={label || (typeof children === 'string' ? children : undefined)}
+      className={`px-5 py-3 min-h-[48px] rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200/80 text-sm font-extrabold transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none ${className}`}
       {...props}
     >
       {loading ? (
