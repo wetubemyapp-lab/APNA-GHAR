@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { EmptyState } from './EmptyState';
 import { 
   X, 
   Building2, 
@@ -237,26 +238,22 @@ export const MyListingsModal: React.FC<MyListingsModalProps> = ({ onClose }) => 
         {/* Listings Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-3">
           {currentList.length === 0 ? (
-            <div className="text-center py-12 px-4 bg-slate-50/70 rounded-3xl border border-dashed border-slate-200 my-4">
-              <Building2 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-sm font-extrabold text-slate-800">No {activeTab} listings found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-                {activeTab === 'active' && 'Post a new property listing to start receiving buyer & tenant inquiries instantly.'}
-                {activeTab === 'pending' && 'You have no paused or under-review listings currently.'}
-                {activeTab === 'draft' && 'No draft properties saved. Drafts auto-save as you build listings.'}
-                {activeTab === 'closed' && 'Sold or rented out properties will appear here for your history records.'}
-              </p>
-              <button
-                onClick={() => {
-                  setEditingProperty(null);
-                  setIsPostPropertyModalOpen(true);
-                  onClose();
-                }}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition"
-              >
-                + Post Free Property
-              </button>
-            </div>
+            <EmptyState 
+              type="no_listings"
+              title={`No ${activeTab} listings found`}
+              message={
+                activeTab === 'active' ? 'Post a new property listing to start receiving buyer & tenant inquiries instantly.' :
+                activeTab === 'pending' ? 'You have no paused or under-review listings currently.' :
+                activeTab === 'draft' ? 'No draft properties saved. Drafts auto-save as you build listings.' :
+                'Sold or rented out properties will appear here for your history records.'
+              }
+              ctaText="Post Property for Free"
+              onCtaClick={() => {
+                setEditingProperty(null);
+                setIsPostPropertyModalOpen(true);
+                onClose();
+              }}
+            />
           ) : (
             currentList.map(prop => {
               const status = getPropertyStatus(prop);

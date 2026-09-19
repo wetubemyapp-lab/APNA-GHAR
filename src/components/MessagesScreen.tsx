@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { EmptyState } from './EmptyState';
 import { 
   MessageSquare, 
   Send, 
@@ -62,9 +63,13 @@ export const MessagesScreen: React.FC = () => {
 
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
             {chatThreads.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-xs">
-                No active conversations yet. Click "Chat" on any property to start an inquiry.
-              </div>
+              <EmptyState 
+                type="no_messages"
+                title="No messages yet."
+                ctaText="Inquire on a Property"
+                onCtaClick={() => useApp().setActiveTab('search')}
+                className="my-8"
+              />
             ) : (
               chatThreads.map(thread => {
                 const isSelected = activeThread?.id === thread.id;

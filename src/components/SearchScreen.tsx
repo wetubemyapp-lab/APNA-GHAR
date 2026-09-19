@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { PropertyCard } from './PropertyCard';
 import { MapView } from './MapView';
+import { EmptyState } from './EmptyState';
 import { 
   Search, 
   X, 
@@ -825,28 +826,15 @@ export const SearchScreen: React.FC = () => {
           ) : (
             <>
               {filteredProperties.length === 0 ? (
-                /* Empty State */
-                <div className="flex flex-col items-center justify-center text-center py-16 px-4 bg-white rounded-3xl border border-slate-200 mt-2">
-                  <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center text-[#3949AB] mb-3">
-                    <Building className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900">No properties match your exact filters</h3>
-                  <p className="text-xs text-slate-500 max-w-sm mt-1 mb-4">
-                    Try adjusting the budget range, clearing the search keyword, or resetting filters to view all verified properties.
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => {
-                        handleClearSearch();
-                        resetFilters();
-                      }}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#3949AB] text-white font-bold text-xs shadow-sm hover:bg-[#283593] transition-all active:scale-95"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Reset All Filters</span>
-                    </button>
-                  </div>
-                </div>
+                <EmptyState 
+                  type="no_search_results"
+                  title="No properties match these filters."
+                  ctaText="Adjust Filters"
+                  onCtaClick={() => {
+                    handleClearSearch();
+                    resetFilters();
+                  }}
+                />
               ) : (
                 /* Property Cards Grid */
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

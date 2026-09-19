@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   X, 
@@ -10,6 +10,8 @@ import {
   MapPin, 
   Image as ImageIcon, 
   Upload, 
+  UploadCloud,
+  Plus,
   Trash2, 
   Star, 
   MoveLeft, 
@@ -87,6 +89,10 @@ export const PostPropertyModal: React.FC<PostPropertyModalProps> = ({ initialPro
   ]);
   const [coverIndex, setCoverIndex] = useState<number>(0);
   const [newPhotoUrl, setNewPhotoUrl] = useState<string>('');
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [dragActive, setDragActive] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Description
   const [title, setTitle] = useState<string>('');
@@ -205,6 +211,85 @@ export const PostPropertyModal: React.FC<PostPropertyModalProps> = ({ initialPro
   };
 
   // Photo handlers
+  const handleFiles = (files: FileList | File[]) => {
+    const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (fileArray.length === 0) {
+      showToast('Please select valid image files (JPG, PNG, WEBP)', 'error');
+      return;
+    }
+    
+    if (photos.length >= 10) {
+      showToast('Maximum 10 photos limit reached', 'error');
+      return;
+    }
+
+    const remainingSlots = 10 - photos.length;
+    const filesToProcess = fileArray.slice(0, remainingSlots);
+
+    if (filesToProcess.length < fileArray.length) {
+      showToast(`Only ${remainingSlots} photo(s) added as limit of 10 was reached`, 'info');
+    }
+
+    setIsUploading(true);
+    setUploadProgress(15);
+
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 85) {
+          clearInterval(interval);
+          return 90;
+        }
+        return prev + 25;
+      });
+    }, 120);
+
+    const newPhotosList: string[] = [];
+    let processedCount = 0;
+
+    filesToProcess.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          newPhotosList.push(e.target.result as string);
+        }
+        processedCount++;
+
+        if (processedCount === filesToProcess.length) {
+          setTimeout(() => {
+            clearInterval(interval);
+            setUploadProgress(100);
+            setTimeout(() => {
+              setPhotos(prev => [...prev, ...newPhotosList]);
+              setIsUploading(false);
+              setUploadProgress(0);
+              showToast(`${newPhotosList.length} photo(s) uploaded successfully!`, 'success');
+            }, 250);
+          }, 300);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  };
+
   const handleAddPhoto = () => {
     if (!newPhotoUrl.trim()) return;
     if (photos.length >= 10) {
@@ -213,7 +298,20 @@ export const PostPropertyModal: React.FC<PostPropertyModalProps> = ({ initialPro
     }
     setPhotos([...photos, newPhotoUrl.trim()]);
     setNewPhotoUrl('');
-    showToast('Photo added', 'success');
+    showToast('Photo added from URL', 'success');
+  };
+
+  const handleAddPresetPhoto = (presetUrl: string) => {
+    if (photos.length >= 10) {
+      showToast('Maximum 10 photos allowed', 'error');
+      return;
+    }
+    if (photos.includes(presetUrl)) {
+      showToast('Preset photo already added', 'info');
+      return;
+    }
+    setPhotos([...photos, presetUrl]);
+    showToast('Preset photo added', 'success');
   };
 
   const handleDeletePhoto = (index: number) => {
@@ -223,9 +321,12 @@ export const PostPropertyModal: React.FC<PostPropertyModalProps> = ({ initialPro
     }
     const updated = photos.filter((_, i) => i !== index);
     setPhotos(updated);
-    if (coverIndex >= updated.length) {
+    if (coverIndex === index) {
       setCoverIndex(0);
+    } else if (coverIndex > index) {
+      setCoverIndex(prev => prev - 1);
     }
+    showToast('Photo deleted', 'info');
   };
 
   const handleMovePhoto = (index: number, direction: 'left' | 'right') => {
@@ -235,6 +336,13 @@ export const PostPropertyModal: React.FC<PostPropertyModalProps> = ({ initialPro
     const temp = updated[index];
     updated[index] = updated[targetIndex];
     updated[targetIndex] = temp;
+
+    if (coverIndex === index) {
+      setCoverIndex(targetIndex);
+    } else if (coverIndex === targetIndex) {
+      setCoverIndex(index);
+    }
+
     setPhotos(updated);
   };
 
@@ -771,14 +879,133 @@ export const PostPropertyModal: React.FC<PostPropertyModalProps> = ({ initialPro
             <div className="space-y-4">
               <div>
                 <h4 className="text-sm font-extrabold text-slate-900">Property Photos ({photos.length}/10)</h4>
-                <p className="text-slate-500 text-xs mt-0.5">Upload minimum 1 photo. Reorder or choose cover photo.</p>
+                <p className="text-slate-500 text-xs mt-0.5">Upload up to 10 high-resolution photos. Set cover image and reorder as needed.</p>
               </div>
 
-              {/* Add Photo Input */}
-              <div className="flex gap-2">
+              {/* PHOTO QUOTA PROGRESS BAR */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2">
+                <div className="flex items-center justify-between text-xs font-extrabold text-slate-800">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-red-600" />
+                    <span>Upload Status & Limit</span>
+                  </div>
+                  <span className="text-slate-700 font-bold">
+                    {photos.length} of 10 photos uploaded ({Math.round((photos.length / 10) * 100)}%)
+                  </span>
+                </div>
+
+                <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      photos.length >= 10 ? 'bg-amber-500' : photos.length >= 1 ? 'bg-red-600' : 'bg-slate-300'
+                    }`}
+                    style={{ width: `${(photos.length / 10) * 100}%` }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium pt-0.5">
+                  <span>Minimum 1 photo required</span>
+                  <span className="text-slate-600 font-bold">{10 - photos.length} slot(s) remaining</span>
+                </div>
+              </div>
+
+              {/* DYNAMIC UPLOADING PROGRESS BAR */}
+              {isUploading && (
+                <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl space-y-2 animate-in fade-in">
+                  <div className="flex items-center justify-between text-xs font-extrabold text-blue-900">
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-blue-600 animate-spin" />
+                      Processing & Uploading Images...
+                    </span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-blue-600 h-full rounded-full transition-all duration-200"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* HIDDEN FILE INPUT */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                className="hidden"
+              />
+
+              {/* DRAG AND DROP ZONE */}
+              <div
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`p-6 rounded-2xl border-2 border-dashed text-center transition cursor-pointer flex flex-col items-center justify-center gap-2 ${
+                  dragActive 
+                    ? 'border-red-600 bg-red-50/80 scale-[1.01]' 
+                    : photos.length >= 10
+                      ? 'border-slate-200 bg-slate-100 opacity-60 cursor-not-allowed'
+                      : 'border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-slate-400'
+                }`}
+              >
+                <div className="w-12 h-12 rounded-2xl bg-white text-red-600 border border-slate-200 flex items-center justify-center shadow-xs">
+                  <UploadCloud className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-extrabold text-slate-900">
+                    {photos.length >= 10 ? 'Maximum 10 photos limit reached' : 'Click to upload photos or drag & drop here'}
+                  </p>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    Supports JPG, PNG, WEBP (Up to 10MB per file)
+                  </p>
+                </div>
+                {photos.length < 10 && (
+                  <button
+                    type="button"
+                    className="mt-1 px-3.5 py-1.5 rounded-xl bg-slate-900 text-white font-extrabold text-[11px] hover:bg-slate-800 transition"
+                  >
+                    Select Files from Device
+                  </button>
+                )}
+              </div>
+
+              {/* PRESET SAMPLE PHOTOS QUICK ADD */}
+              <div>
+                <span className="block text-[11px] font-bold text-slate-600 mb-1.5">
+                  Quick Add Sample Interior & Exterior Photos:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { label: 'Living Room', url: SAMPLE_PHOTOS[0] },
+                    { label: 'Master Bedroom', url: SAMPLE_PHOTOS[1] },
+                    { label: 'Modular Kitchen', url: SAMPLE_PHOTOS[2] },
+                    { label: 'Building Exterior', url: SAMPLE_PHOTOS[3] },
+                    { label: 'Scenic Balcony', url: SAMPLE_PHOTOS[4] }
+                  ].map((preset, pIdx) => (
+                    <button
+                      key={pIdx}
+                      type="button"
+                      disabled={photos.length >= 10}
+                      onClick={() => handleAddPresetPhoto(preset.url)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition flex items-center gap-1 disabled:opacity-40"
+                    >
+                      <Plus className="w-3 h-3 text-red-600" />
+                      <span>{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* PASTE PHOTO URL FALLBACK */}
+              <div className="flex gap-2 pt-1">
                 <input
                   type="url"
-                  placeholder="Paste photo URL or select preset below..."
+                  placeholder="Or paste photo URL directly..."
                   value={newPhotoUrl}
                   onChange={(e) => setNewPhotoUrl(e.target.value)}
                   className="flex-1 p-2.5 rounded-xl border border-slate-200 text-xs font-medium"
@@ -786,73 +1013,97 @@ export const PostPropertyModal: React.FC<PostPropertyModalProps> = ({ initialPro
                 <button
                   type="button"
                   onClick={handleAddPhoto}
-                  className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-extrabold text-xs shrink-0 hover:bg-slate-800"
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-white font-extrabold text-xs shrink-0 hover:bg-slate-900"
                 >
-                  Add Photo
+                  Add URL
                 </button>
               </div>
 
-              {/* Photo Cards Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {photos.map((photo, idx) => {
-                  const isCover = coverIndex === idx;
-                  return (
-                    <div key={idx} className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 group">
-                      <img src={photo} alt={`Property ${idx + 1}`} className="w-full h-28 object-cover" />
-                      
-                      {/* Cover Badge */}
-                      {isCover && (
-                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-black shadow-xs">
-                          Cover Photo
+              {/* PREVIEW GRID WITH REORDER & DELETE BUTTONS */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-extrabold text-slate-800">
+                    Uploaded Photos ({photos.length})
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    Use arrows to reorder • First photo is cover
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {photos.map((photo, idx) => {
+                    const isCover = coverIndex === idx;
+                    return (
+                      <div key={idx} className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-xs">
+                        <img src={photo} alt={`Property photo ${idx + 1}`} className="w-full h-32 object-cover" />
+                        
+                        {/* Index Badge */}
+                        <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-black/70 text-white text-[10px] font-extrabold">
+                          #{idx + 1}
                         </span>
-                      )}
 
-                      {/* Controls Overlay */}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col justify-between p-2">
-                        <div className="flex justify-end gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePhoto(idx)}
-                            className="p-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700"
-                            title="Delete Photo"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        {/* Cover Badge */}
+                        {isCover && (
+                          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-black shadow-xs flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-white text-white" />
+                            Cover Photo
+                          </span>
+                        )}
 
-                        <div className="flex items-center justify-between">
-                          <button
-                            type="button"
-                            disabled={idx === 0}
-                            onClick={() => handleMovePhoto(idx, 'left')}
-                            className="p-1 rounded bg-white/80 text-slate-900 disabled:opacity-30"
-                          >
-                            <ArrowLeft className="w-3 h-3" />
-                          </button>
+                        {/* Control Bar Overlay */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col justify-between p-2">
+                          {/* Top Right Actions: Delete */}
+                          <div className="flex justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePhoto(idx)}
+                              className="p-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition shadow-xs"
+                              title="Delete Photo"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
 
-                          <button
-                            type="button"
-                            onClick={() => setCoverIndex(idx)}
-                            className={`px-2 py-1 rounded text-[10px] font-extrabold ${
-                              isCover ? 'bg-amber-400 text-slate-950' : 'bg-white text-slate-900'
-                            }`}
-                          >
-                            Set Cover
-                          </button>
+                          {/* Bottom Row Actions: Move Left, Set Cover, Move Right */}
+                          <div className="flex items-center justify-between gap-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMovePhoto(idx, 'left')}
+                              className="p-1.5 rounded-lg bg-white/90 text-slate-900 hover:bg-white disabled:opacity-30 transition"
+                              title="Move Left / Earlier"
+                            >
+                              <ArrowLeft className="w-3.5 h-3.5" />
+                            </button>
 
-                          <button
-                            type="button"
-                            disabled={idx === photos.length - 1}
-                            onClick={() => handleMovePhoto(idx, 'right')}
-                            className="p-1 rounded bg-white/80 text-slate-900 disabled:opacity-30"
-                          >
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => setCoverIndex(idx)}
+                              className={`px-2 py-1 rounded-lg text-[10px] font-extrabold transition flex items-center gap-1 ${
+                                isCover 
+                                  ? 'bg-amber-400 text-slate-950 shadow-2xs' 
+                                  : 'bg-white/90 text-slate-900 hover:bg-white'
+                              }`}
+                            >
+                              <Star className={`w-3 h-3 ${isCover ? 'fill-slate-950' : ''}`} />
+                              <span>{isCover ? 'Cover' : 'Set Cover'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={idx === photos.length - 1}
+                              onClick={() => handleMovePhoto(idx, 'right')}
+                              className="p-1.5 rounded-lg bg-white/90 text-slate-900 hover:bg-white disabled:opacity-30 transition"
+                              title="Move Right / Later"
+                            >
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}

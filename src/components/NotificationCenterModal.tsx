@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { EmptyState } from './EmptyState';
 import { 
   X, 
   Bell, 
@@ -115,10 +116,16 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
         {/* List of Notifications */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2.5 bg-slate-50/50 no-scrollbar">
           {filteredNotifs.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 text-xs">
-              <Bell className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p>No notifications in this category</p>
-            </div>
+            <EmptyState 
+              type="no_notifications"
+              title="You're all caught up!"
+              ctaText="Explore Home"
+              onCtaClick={() => {
+                setActiveTab('search');
+                onClose();
+              }}
+              className="my-4"
+            />
           ) : (
             filteredNotifs.map(n => (
               <div

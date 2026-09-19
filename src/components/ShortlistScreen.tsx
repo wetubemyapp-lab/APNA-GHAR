@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { PropertyCard } from './PropertyCard';
 import { CompareModal } from './CompareModal';
+import { EmptyState } from './EmptyState';
 import { Project } from '../types';
 import { 
   Heart, 
@@ -183,25 +184,12 @@ export const ShortlistScreen: React.FC = () => {
       {activeMainTab === 'properties' && (
         <>
           {filteredSavedProperties.length === 0 ? (
-            /* EMPTY STATE */
-            <div className="flex flex-col items-center justify-center text-center py-16 px-4 bg-white rounded-3xl border border-slate-200/90 shadow-xs">
-              <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 mb-3 shadow-inner">
-                <Heart className="w-8 h-8 fill-rose-500/20 stroke-rose-500 stroke-[1.5]" />
-              </div>
-              <h3 className="text-lg font-black text-slate-900">
-                Save properties you want to revisit.
-              </h3>
-              <p className="text-xs text-slate-500 max-w-sm mt-1 mb-6 leading-relaxed">
-                Tap the heart icon on any property while exploring to keep track of homes you love and compare them side-by-side.
-              </p>
-              <button
-                onClick={() => setActiveTab('search')}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#E53935] hover:bg-red-700 text-white font-extrabold text-xs shadow-md transition-all active:scale-95"
-              >
-                <Search className="w-4 h-4" />
-                <span>Explore Properties</span>
-              </button>
-            </div>
+            <EmptyState 
+              type="no_shortlist"
+              title="Your shortlist is empty."
+              ctaText="Explore Properties"
+              onCtaClick={() => setActiveTab('search')}
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredSavedProperties.map(property => (
@@ -216,25 +204,13 @@ export const ShortlistScreen: React.FC = () => {
       {activeMainTab === 'projects' && (
         <>
           {savedProjects.length === 0 ? (
-            /* EMPTY STATE FOR PROJECTS */
-            <div className="flex flex-col items-center justify-center text-center py-16 px-4 bg-white rounded-3xl border border-slate-200/90 shadow-xs">
-              <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 mb-3 shadow-inner">
-                <Building className="w-8 h-8 stroke-[1.5]" />
-              </div>
-              <h3 className="text-lg font-black text-slate-900">
-                Save properties you want to revisit.
-              </h3>
-              <p className="text-xs text-slate-500 max-w-sm mt-1 mb-6 leading-relaxed">
-                Shortlist mega township projects, upcoming launches, and builder developments to track construction timelines.
-              </p>
-              <button
-                onClick={() => setActiveTab('search')}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#E53935] hover:bg-red-700 text-white font-extrabold text-xs shadow-md transition-all active:scale-95"
-              >
-                <Search className="w-4 h-4" />
-                <span>Explore Properties</span>
-              </button>
-            </div>
+            <EmptyState 
+              type="no_shortlist"
+              title="Your shortlist is empty."
+              message="Shortlist mega township projects, upcoming launches, and builder developments to track construction timelines."
+              ctaText="Explore Properties"
+              onCtaClick={() => setActiveTab('search')}
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {savedProjects.map(project => (

@@ -1,6 +1,6 @@
 {
-  "name": "Apna Ghar - Real Estate Discovery",
-  "description": "Apna Ghar is a modern, trustworthy Indian real-estate discovery application built with Android Material 3 design principles for buying, renting, projects, and verified properties.",
+  "name": "Apna Ghar (Nestora)",
+  "description": "Indian Real Estate Discovery Web and Mobile application for buyers, tenants, owners, and agents.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

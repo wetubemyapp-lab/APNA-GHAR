@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Property } from '../types';
 import { useApp } from '../context/AppContext';
+import { AmenityGrid } from './AmenityGrid';
 import { 
   ArrowLeft, 
   Heart, 
@@ -563,17 +564,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ proper
             <span className="text-xs font-bold text-slate-500">{property.amenities.length} Verified Features</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {property.amenities.map((amenity, idx) => (
-              <div 
-                key={idx}
-                className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-800"
-              >
-                <CheckCircle2 className="w-4 h-4 text-[#3949AB] shrink-0" />
-                <span className="truncate">{amenity}</span>
-              </div>
-            ))}
-          </div>
+          <AmenityGrid amenities={property.amenities} />
         </div>
 
         {/* ----------------- SECTION: FLOOR PLAN ----------------- */}
