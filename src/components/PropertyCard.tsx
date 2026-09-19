@@ -46,7 +46,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
 
   const handleWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const msg = `Hi, I am inquiring about "${property.title}" (${property.priceDisplay}) on Nestora: ${window.location.origin}`;
+    const msg = `Hi, I am inquiring about "${property.title}" (${property.priceDisplay}) on Apna Ghar: ${window.location.origin}`;
     window.open(`https://wa.me/${property.ownerWhatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
     showToast('Opening WhatsApp chat with owner/agent', 'info');
   };

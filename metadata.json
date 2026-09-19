@@ -1,5 +1,5 @@
 {
-  "name": "Apna Ghar (Nestora)",
+  "name": "Apna Ghar",
   "description": "Indian Real Estate Discovery Web and Mobile application for buyers, tenants, owners, and agents.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

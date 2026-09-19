@@ -147,16 +147,17 @@ interface AppContextType {
   setEditingProperty: (prop: Property | null) => void;
   updateExistingProperty: (id: string, updated: Partial<Property>) => void;
   
-  // Auth (Screens 16, 17, 18)
+  // Auth (Screens 16, 17) - Email/Password + Mobile + Area
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
   authMode: AuthMode;
   setAuthMode: (mode: AuthMode) => void;
   authIdentifier: string;
   setAuthIdentifier: (val: string) => void;
-  handleLogin: (phoneOrEmail: string) => void;
-  handleRegister: (data: { name: string; email: string; phone: string; role: UserRole }) => void;
-  handleVerifyOtp: (otp: string) => boolean;
+  rememberMe: boolean;
+  setRememberMe: (val: boolean) => void;
+  handleLoginWithPassword: (identifier: string, password: string) => { ok: boolean; message: string };
+  handleSignUp: (data: { name: string; email: string; phone: string; area: string; password: string; role?: UserRole }) => { ok: boolean; message: string };
   handleLogout: () => void;
   
   // Messaging / Chat (Screen 23)
@@ -229,7 +230,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Selected city
   const [selectedCity, setSelectedCity] = useState<typeof CITIES_LIST[0]>(() => {
-    const saved = localStorage.getItem('nestora_city');
+    const saved = localStorage.getItem('apnaghar_city');
     if (saved) {
       const found = CITIES_LIST.find(c => c.name === saved);
       if (found) return found;
@@ -240,13 +241,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // User state
   const [currentUser, setCurrentUser] = useState<User>(() => {
-    const saved = localStorage.getItem('nestora_user');
+    const saved = localStorage.getItem('apnaghar_user');
     return saved ? JSON.parse(saved) : INITIAL_USER;
   });
 
   // Properties list
   const [properties, setProperties] = useState<Property[]>(() => {
-    const saved = localStorage.getItem('nestora_properties');
+    const saved = localStorage.getItem('apnaghar_properties');
     return saved ? JSON.parse(saved) : INITIAL_PROPERTIES;
   });
 
@@ -260,7 +261,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Filters State
   const [filterState, setFilterState] = useState<FilterState>(() => {
-    const saved = localStorage.getItem('nestora_filters');
+    const saved = localStorage.getItem('apnaghar_filters');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -296,10 +297,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isEditListingModalOpen, setIsEditListingModalOpen] = useState<boolean>(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
-  // Auth Modals (Screens 16, 17, 18)
+  // Auth Modals (Screens 16, 17)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [authIdentifier, setAuthIdentifier] = useState<string>('');
+  const [rememberMe, setRememberMe] = useState<boolean>(true);
 
   // Notifications (Screen 24)
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState<boolean>(false);
@@ -323,20 +325,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Callback / Visit schedules
   const [callbackRequests, setCallbackRequests] = useState<CallbackRequest[]>(() => {
-    const saved = localStorage.getItem('nestora_callbacks');
+    const saved = localStorage.getItem('apnaghar_callbacks');
     return saved ? JSON.parse(saved) : (INITIAL_USER.callbackRequests || []);
   });
 
   // Chat
   const [chatThreads, setChatThreads] = useState<ChatThread[]>(() => {
-    const saved = localStorage.getItem('nestora_chats');
+    const saved = localStorage.getItem('apnaghar_chats');
     return saved ? JSON.parse(saved) : INITIAL_CHAT_THREADS;
   });
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
 
   // Notifications
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
-    const saved = localStorage.getItem('nestora_notifs');
+    const saved = localStorage.getItem('apnaghar_notifs');
     return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
   });
 
@@ -352,7 +354,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync city selection with filterState and localStorage
   useEffect(() => {
-    localStorage.setItem('nestora_city', selectedCity.name);
+    localStorage.setItem('apnaghar_city', selectedCity.name);
     setFilterState(prev => ({ ...prev, city: selectedCity.name }));
   }, [selectedCity]);
 
@@ -363,32 +365,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Save properties to localStorage
   useEffect(() => {
-    localStorage.setItem('nestora_properties', JSON.stringify(properties));
+    localStorage.setItem('apnaghar_properties', JSON.stringify(properties));
   }, [properties]);
 
   // Save chats
   useEffect(() => {
-    localStorage.setItem('nestora_chats', JSON.stringify(chatThreads));
+    localStorage.setItem('apnaghar_chats', JSON.stringify(chatThreads));
   }, [chatThreads]);
 
   // Save user
   useEffect(() => {
-    localStorage.setItem('nestora_user', JSON.stringify(currentUser));
+    localStorage.setItem('apnaghar_user', JSON.stringify(currentUser));
   }, [currentUser]);
 
   // Save callbacks
   useEffect(() => {
-    localStorage.setItem('nestora_callbacks', JSON.stringify(callbackRequests));
+    localStorage.setItem('apnaghar_callbacks', JSON.stringify(callbackRequests));
   }, [callbackRequests]);
 
   // Save notifications
   useEffect(() => {
-    localStorage.setItem('nestora_notifs', JSON.stringify(notifications));
+    localStorage.setItem('apnaghar_notifs', JSON.stringify(notifications));
   }, [notifications]);
 
   // Save filterState
   useEffect(() => {
-    localStorage.setItem('nestora_filters', JSON.stringify(filterState));
+    localStorage.setItem('apnaghar_filters', JSON.stringify(filterState));
   }, [filterState]);
 
   // Filter properties logic
@@ -593,6 +595,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [properties, currentUser.savedPropertyIds]);
 
   const toggleSaveProperty = (id: string) => {
+    if (!currentUser.isLoggedIn || currentUser.name === 'Guest User') {
+      setAuthMode('login');
+      setIsAuthModalOpen(true);
+      showToast('Please sign in to save properties to your shortlist', 'info');
+      return;
+    }
     const isSaved = (currentUser.savedPropertyIds || []).includes(id);
     const updated = isSaved 
       ? (currentUser.savedPropertyIds || []).filter(item => item !== id)
@@ -648,6 +656,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Schedule Visit (Screen 15)
   const openScheduleVisit = (prop: Property) => {
+    if (!currentUser.isLoggedIn || currentUser.name === 'Guest User') {
+      setAuthMode('login');
+      setIsAuthModalOpen(true);
+      showToast('Please sign in to schedule a free site visit', 'info');
+      return;
+    }
     setScheduleVisitProperty(prop);
     setIsScheduleVisitModalOpen(true);
   };
@@ -704,6 +718,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Contact / Enquiry (Screen 14)
   const openEnquiryModal = (prop: Property) => {
+    if (!currentUser.isLoggedIn || currentUser.name === 'Guest User') {
+      setAuthMode('login');
+      setIsAuthModalOpen(true);
+      showToast('Please sign in to contact the owner or builder', 'info');
+      return;
+    }
     setEnquiryProperty(prop);
     setIsEnquiryModalOpen(true);
   };
@@ -738,7 +758,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const notif: NotificationItem = {
       id: `notif-${Date.now()}`,
       title: 'Property Listing Published Live! 🏠',
-      message: `Your property "${newProperty.title.slice(0, 35)}..." is now verified and active on Nestora.`,
+      message: `Your property "${newProperty.title.slice(0, 35)}..." is now verified and active on Apna Ghar.`,
       type: 'system',
       timestamp: 'Just now',
       isRead: false,
@@ -769,44 +789,146 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Listing removed successfully', 'info');
   };
 
-  // Auth Handlers (Screens 16, 17, 18)
-  const handleLogin = (phoneOrEmail: string) => {
-    setAuthIdentifier(phoneOrEmail);
-    setAuthMode('otp');
-    showToast(`OTP sent to ${phoneOrEmail} (Code: 123456)`, 'info');
-  };
-
-  const handleRegister = (data: { name: string; email: string; phone: string; role: UserRole }) => {
-    setCurrentUser(prev => ({
-      ...prev,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      role: data.role
-    }));
-    setAuthIdentifier(data.phone || data.email);
-    setAuthMode('otp');
-    showToast('Account details saved. Please verify OTP (Code: 123456).', 'info');
-  };
-
-  const handleVerifyOtp = (otp: string): boolean => {
-    if (otp.length === 6 || otp === '123456') {
-      setIsAuthModalOpen(false);
-      showToast(`Welcome, ${currentUser.name}! Signed in successfully.`, 'success');
-      return true;
-    } else {
-      showToast('Please enter a 6-digit OTP (e.g. 123456)', 'error');
-      return false;
+  // ---------- Auth helpers ----------
+  const getRegisteredUsers = (): Array<User & { password: string }> => {
+    try {
+      const raw = localStorage.getItem('apnaghar_registered_users');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
     }
   };
 
-  const handleLogout = () => {
-    setCurrentUser(INITIAL_USER);
-    showToast('Logged out successfully', 'info');
+  const saveRegisteredUsers = (users: Array<User & { password: string }>) => {
+    localStorage.setItem('apnaghar_registered_users', JSON.stringify(users));
   };
+
+  // Email/Password + Mobile sign in
+  const handleLoginWithPassword = (identifier: string, password: string): { ok: boolean; message: string } => {
+    const normalized = identifier.trim().toLowerCase();
+    if (!normalized || !password) {
+      return { ok: false, message: 'Please enter your email/mobile and password.' };
+    }
+    const users = getRegisteredUsers();
+    const match = users.find(
+      u => (u.email && u.email.toLowerCase() === normalized) ||
+           (u.phone && u.phone.replace(/\D/g, '').slice(-10) === normalized.replace(/\D/g, '').slice(-10))
+    );
+    if (!match) {
+      return { ok: false, message: 'No account found with these credentials. Please sign up first.' };
+    }
+    if (match.password !== password) {
+      return { ok: false, message: 'Incorrect password. Please try again.' };
+    }
+    const loggedInUser: User = { ...match, isLoggedIn: true, password: undefined };
+    setCurrentUser(loggedInUser);
+    if (rememberMe) {
+      localStorage.setItem('apnaghar_session', match.id);
+    } else {
+      sessionStorage.setItem('apnaghar_session', match.id);
+    }
+    setIsAuthModalOpen(false);
+    setAuthMode('login');
+    showToast(`Welcome back, ${match.name}! You are now signed in.`, 'success');
+    return { ok: true, message: 'Login successful.' };
+  };
+
+  // Full register with name/email/phone/area/password
+  const handleSignUp = (data: {
+    name: string;
+    email: string;
+    phone: string;
+    area: string;
+    password: string;
+    role?: UserRole;
+  }): { ok: boolean; message: string } => {
+    const users = getRegisteredUsers();
+    const emailKey = data.email.trim().toLowerCase();
+    const phoneKey = data.phone.replace(/\D/g, '').slice(-10);
+    if (users.some(u => u.email && u.email.toLowerCase() === emailKey)) {
+      return { ok: false, message: 'An account with this email already exists. Please sign in.' };
+    }
+    if (users.some(u => u.phone && u.phone.replace(/\D/g, '').slice(-10) === phoneKey)) {
+      return { ok: false, message: 'An account with this mobile number already exists.' };
+    }
+    const newUser: User & { password: string } = {
+      id: `user-${Date.now()}`,
+      name: data.name.trim(),
+      email: data.email.trim(),
+      phone: data.phone.trim(),
+      area: data.area.trim(),
+      role: data.role || 'buyer',
+      avatar: '',
+      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name.trim())}&backgroundColor=3949ab,f4a62a&textColor=ffffff`,
+      password: data.password,
+      isLoggedIn: true,
+      savedPropertyIds: [],
+      savedProjectIds: [],
+      comparePropertyIds: [],
+      recentSearches: [],
+      postedProperties: [],
+      callbackRequests: [],
+      joinedDate: new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+    };
+    users.push(newUser);
+    saveRegisteredUsers(users);
+    const loggedInUser: User = { ...newUser, password: undefined };
+    setCurrentUser(loggedInUser);
+    if (rememberMe) {
+      localStorage.setItem('apnaghar_session', newUser.id);
+    } else {
+      sessionStorage.setItem('apnaghar_session', newUser.id);
+    }
+    setIsAuthModalOpen(false);
+    setAuthMode('login');
+    showToast(`Account created! Welcome to Apna Ghar, ${newUser.name.split(' ')[0]}.`, 'success');
+    return { ok: true, message: 'Registration successful.' };
+  };
+
+  const handleLogout = () => {
+    setActiveTab('home');
+    setSelectedProperty(null);
+    setSelectedProject(null);
+    setSelectedLocality(null);
+    setIsAuthModalOpen(false);
+    setIsMyListingsModalOpen(false);
+    setIsManageListingModalOpen(false);
+    setIsEnquiryModalOpen(false);
+    setIsScheduleVisitModalOpen(false);
+    setIsCompareModalOpen(false);
+    setIsNotificationCenterOpen(false);
+    setChatThreads([]);
+    setCallbackRequests([]);
+    setCurrentUser(INITIAL_USER);
+    localStorage.removeItem('apnaghar_user');
+    localStorage.removeItem('apnaghar_session');
+    sessionStorage.removeItem('apnaghar_session');
+    localStorage.removeItem('apnaghar_post_property_draft');
+    showToast('Successfully Logged Out', 'success');
+  };
+
+  // Restore session on mount from rememberMe / sessionStorage
+  useEffect(() => {
+    const sessionId = localStorage.getItem('apnaghar_session') || sessionStorage.getItem('apnaghar_session');
+    if (sessionId) {
+      const users = getRegisteredUsers();
+      const match = users.find(u => u.id === sessionId);
+      if (match) {
+        const { password: _pw, ...rest } = match;
+        setCurrentUser({ ...rest, isLoggedIn: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Messaging (Screen 23)
   const openChatWithProperty = (prop: Property, initialMsg?: string) => {
+    if (!currentUser.isLoggedIn || currentUser.name === 'Guest User') {
+      setAuthMode('login');
+      setIsAuthModalOpen(true);
+      showToast('Please sign in to chat with owners and builders', 'info');
+      return;
+    }
     let thread = chatThreads.find(t => t.propertyId === prop.id);
     if (!thread) {
       thread = {
@@ -1011,9 +1133,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAuthMode('register');
         setIsAuthModalOpen(true);
         break;
-      case 18: // 18. OTP Verification
-        setAuthMode('otp');
-        setAuthIdentifier('+91 98765 43210');
+      case 18: // 18. Login (Email/Password)
+        setAuthMode('login');
         setIsAuthModalOpen(true);
         break;
       case 19: // 19. Post Property
@@ -1139,9 +1260,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAuthMode,
         authIdentifier,
         setAuthIdentifier,
-        handleLogin,
-        handleRegister,
-        handleVerifyOtp,
+        rememberMe,
+        setRememberMe,
+        handleLoginWithPassword,
+        handleSignUp,
         handleLogout,
         chatThreads,
         activeThreadId,

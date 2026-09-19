@@ -36,12 +36,20 @@ export const ContactEnquiryModal: React.FC<ContactEnquiryModalProps> = ({ proper
   const [allowShare, setAllowShare] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEnquirySuccess, setIsEnquirySuccess] = useState(false);
+  const [enquiryErrors, setEnquiryErrors] = useState<{name?: string; phone?: string; email?: string; message?: string}>({});
 
   // Callback Form State
   const [callbackName, setCallbackName] = useState(currentUser.name || '');
   const [callbackPhone, setCallbackPhone] = useState(currentUser.phone || '');
   const [preferredTime, setPreferredTime] = useState<'Morning' | 'Afternoon' | 'Evening'>('Morning');
   const [isCallbackSuccess, setIsCallbackSuccess] = useState(false);
+  const [callbackErrors, setCallbackErrors] = useState<{name?: string; phone?: string}>({});
+
+  const validateEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+  const validatePhone = (p: string) => {
+    const digits = p.replace(/\D/g, '');
+    return digits.length >= 10 && digits.length <= 13;
+  };
 
   // Mask private phone numbers
   const maskedOwnerPhone = property.ownerPhone 
@@ -50,8 +58,22 @@ export const ContactEnquiryModal: React.FC<ContactEnquiryModalProps> = ({ proper
 
   const handleSendEnquiry = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !email || !message) {
-      showToast('Please complete all enquiry fields', 'error');
+    const errs: typeof enquiryErrors = {};
+    if (!name.trim()) errs.name = 'Name is required';
+    else if (name.trim().length < 2) errs.name = 'Enter a valid name';
+    if (!phone.trim()) errs.phone = 'Phone number is required';
+    else if (!validatePhone(phone)) errs.phone = 'Enter a valid 10-digit phone number';
+    if (!email.trim()) errs.email = 'Email is required';
+    else if (!validateEmail(email)) errs.email = 'Enter a valid email address';
+    if (!message.trim()) errs.message = 'Please write a short message';
+    else if (message.trim().length < 6) errs.message = 'Message is too short';
+    setEnquiryErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      showToast('Please fix the highlighted errors', 'error');
+      return;
+    }
+    if (!allowShare) {
+      showToast('Please consent to share your enquiry with the advertiser', 'error');
       return;
     }
 
@@ -59,14 +81,20 @@ export const ContactEnquiryModal: React.FC<ContactEnquiryModalProps> = ({ proper
     setTimeout(() => {
       setIsSubmitting(false);
       setIsEnquirySuccess(true);
-      showToast('Your enquiry has been sent.', 'success');
-    }, 500);
+      showToast('Your enquiry has been sent. The owner will contact you shortly.', 'success');
+    }, 600);
   };
 
   const handleRequestCallback = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!callbackName || !callbackPhone) {
-      showToast('Please provide your name and phone number', 'error');
+    const errs: typeof callbackErrors = {};
+    if (!callbackName.trim()) errs.name = 'Name is required';
+    else if (callbackName.trim().length < 2) errs.name = 'Enter a valid name';
+    if (!callbackPhone.trim()) errs.phone = 'Phone number is required';
+    else if (!validatePhone(callbackPhone)) errs.phone = 'Enter a valid 10-digit phone number';
+    setCallbackErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      showToast('Please fix the highlighted errors', 'error');
       return;
     }
 
@@ -74,8 +102,8 @@ export const ContactEnquiryModal: React.FC<ContactEnquiryModalProps> = ({ proper
     setTimeout(() => {
       setIsSubmitting(false);
       setIsCallbackSuccess(true);
-      showToast('Callback request submitted.', 'success');
-    }, 500);
+      showToast('Callback request submitted. We will connect you shortly.', 'success');
+    }, 600);
   };
 
   const handleDirectCall = () => {
@@ -202,71 +230,72 @@ export const ContactEnquiryModal: React.FC<ContactEnquiryModalProps> = ({ proper
                   {/* Name */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Full Name
+                      Full Name <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
-                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <User className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${enquiryErrors.name ? 'text-rose-500' : 'text-slate-400'}`} />
                       <input 
-                        type="text" 
-                        required
+                        type="text"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) => { setName(e.target.value); setEnquiryErrors(prev => ({...prev, name: undefined})); }}
                         placeholder="Your Name"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600"
+                        className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 ${enquiryErrors.name ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-200 focus:ring-red-600'}`}
                       />
                     </div>
+                    {enquiryErrors.name && <p className="text-[10px] text-rose-600 font-medium mt-1">{enquiryErrors.name}</p>}
                   </div>
 
                   {/* Phone & Email Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Phone Number
+                        Phone Number <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
-                        <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <Phone className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${enquiryErrors.phone ? 'text-rose-500' : 'text-slate-400'}`} />
                         <input 
-                          type="tel" 
-                          required
+                          type="tel"
+                          inputMode="numeric"
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
+                          onChange={(e) => { setPhone(e.target.value); setEnquiryErrors(prev => ({...prev, phone: undefined})); }}
                           placeholder="+91 9876543210"
-                          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600"
+                          className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 ${enquiryErrors.phone ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-200 focus:ring-red-600'}`}
                         />
                       </div>
+                      {enquiryErrors.phone && <p className="text-[10px] text-rose-600 font-medium mt-1">{enquiryErrors.phone}</p>}
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Email Address
+                        Email Address <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <Mail className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${enquiryErrors.email ? 'text-rose-500' : 'text-slate-400'}`} />
                         <input 
-                          type="email" 
-                          required
+                          type="email"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => { setEmail(e.target.value); setEnquiryErrors(prev => ({...prev, email: undefined})); }}
                           placeholder="you@example.com"
-                          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600"
+                          className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 ${enquiryErrors.email ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-200 focus:ring-red-600'}`}
                         />
                       </div>
+                      {enquiryErrors.email && <p className="text-[10px] text-rose-600 font-medium mt-1">{enquiryErrors.email}</p>}
                     </div>
                   </div>
 
                   {/* Message */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Message
+                      Message <span className="text-rose-500">*</span>
                     </label>
                     <textarea 
                       rows={3}
-                      required
                       value={message}
-                      onChange={(e) => setMessage(e.target.value)}
+                      onChange={(e) => { setMessage(e.target.value); setEnquiryErrors(prev => ({...prev, message: undefined})); }}
                       placeholder="Write your specific questions..."
-                      className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600"
+                      className={`w-full p-3 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 ${enquiryErrors.message ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-200 focus:ring-red-600'}`}
                     />
+                    {enquiryErrors.message && <p className="text-[10px] text-rose-600 font-medium mt-1">{enquiryErrors.message}</p>}
                   </div>
 
                   {/* Checkbox */}
@@ -333,37 +362,38 @@ export const ContactEnquiryModal: React.FC<ContactEnquiryModalProps> = ({ proper
                   {/* Name */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Full Name
+                      Full Name <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
-                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <User className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${callbackErrors.name ? 'text-rose-500' : 'text-slate-400'}`} />
                       <input 
-                        type="text" 
-                        required
+                        type="text"
                         value={callbackName}
-                        onChange={(e) => setCallbackName(e.target.value)}
+                        onChange={(e) => { setCallbackName(e.target.value); setCallbackErrors(prev => ({...prev, name: undefined})); }}
                         placeholder="Your Name"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 ${callbackErrors.name ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-200 focus:ring-amber-500'}`}
                       />
                     </div>
+                    {callbackErrors.name && <p className="text-[10px] text-rose-600 font-medium mt-1">{callbackErrors.name}</p>}
                   </div>
 
                   {/* Phone */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Phone Number
+                      Phone Number <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
-                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Phone className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${callbackErrors.phone ? 'text-rose-500' : 'text-slate-400'}`} />
                       <input 
-                        type="tel" 
-                        required
+                        type="tel"
+                        inputMode="numeric"
                         value={callbackPhone}
-                        onChange={(e) => setCallbackPhone(e.target.value)}
+                        onChange={(e) => { setCallbackPhone(e.target.value); setCallbackErrors(prev => ({...prev, phone: undefined})); }}
                         placeholder="+91 9876543210"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 ${callbackErrors.phone ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-200 focus:ring-amber-500'}`}
                       />
                     </div>
+                    {callbackErrors.phone && <p className="text-[10px] text-rose-600 font-medium mt-1">{callbackErrors.phone}</p>}
                   </div>
 
                   {/* Preferred Time Options */}

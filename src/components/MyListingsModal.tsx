@@ -92,7 +92,7 @@ export const MyListingsModal: React.FC<MyListingsModalProps> = ({ onClose }) => 
     showToast(
       newStatus === 'pending' 
         ? 'Listing paused. It will no longer appear in search.' 
-        : 'Listing is now Active and live on NestOra!',
+        : 'Listing is now Active and live on Apna Ghar!',
       'info'
     );
   };

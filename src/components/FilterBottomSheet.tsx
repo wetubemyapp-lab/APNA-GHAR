@@ -552,7 +552,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({ onClose })
                   </div>
                   <div>
                     <span className="font-bold text-slate-900 block text-xs">Verified Properties Only</span>
-                    <span className="text-[10px] text-slate-500">Verified by Nestora field agents</span>
+                    <span className="text-[10px] text-slate-500">Verified by Apna Ghar field agents</span>
                   </div>
                 </div>
                 <input

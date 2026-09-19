@@ -32,7 +32,7 @@ export const ContactButton: React.FC<ContactButtonProps> = ({
   const handleWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     const cleanWhatsapp = (whatsapp || phone).replace(/[^0-9]/g, '');
-    const msg = `Hi, I am inquiring about "${title}" on Nestora: ${window.location.origin}`;
+    const msg = `Hi, I am inquiring about "${title}" on Apna Ghar: ${window.location.origin}`;
     window.open(`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
     showToast('Opening WhatsApp chat...', 'info');
   };
@@ -40,8 +40,8 @@ export const ContactButton: React.FC<ContactButtonProps> = ({
   const handleEmail = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!email) return;
-    const subject = `Nestora: Inquiry about "${title}"`;
-    const body = `Hi ${name},\n\nI am interested in this property on Nestora: ${window.location.origin}`;
+    const subject = `Apna Ghar: Inquiry about "${title}"`;
+    const body = `Hi ${name},\n\nI am interested in this property on Apna Ghar: ${window.location.origin}`;
     window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     showToast('Opening mail client...', 'info');
   };

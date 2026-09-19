@@ -151,7 +151,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ proper
     if (navigator.share) {
       navigator.share({
         title: property.title,
-        text: `Check out this property on Nestora: ${property.title} (${property.priceDisplay})`,
+        text: `Check out this property on Apna Ghar: ${property.title} (${property.priceDisplay})`,
         url: window.location.href,
       }).catch(() => {});
     } else {
@@ -161,7 +161,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ proper
   };
 
   const handleWhatsApp = () => {
-    const msg = `Hi, I am interested in "${property.title}" (${property.priceDisplay}) listed on Nestora. Please share details.`;
+    const msg = `Hi, I am interested in "${property.title}" (${property.priceDisplay}) listed on Apna Ghar. Please share details.`;
     window.open(`https://wa.me/${property.ownerWhatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
