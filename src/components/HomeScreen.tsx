@@ -573,7 +573,7 @@ export const HomeScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* SECTION: Why use Nestora? (4 Feature Cards) */}
+        {/* SECTION: Why use Apna Ghar? (4 Feature Cards) */}
         <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -583,7 +583,7 @@ export const HomeScreen: React.FC = () => {
                 Platform Advantage
               </span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight mt-2">
-                Why use Nestora?
+                Why use Apna Ghar?
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">
                 India's most trusted real estate ecosystem designed to empower buyers, tenants, and sellers with transparent document verification and direct contacts.

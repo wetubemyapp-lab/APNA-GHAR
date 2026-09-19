@@ -20,7 +20,7 @@ export const ComposeInspectorModal: React.FC<ComposeInspectorModalProps> = ({ on
 
   const codeSnippets: Record<string, string> = {
     architecture: `// ==========================================
-// 🏗️ Nestora Jetpack Compose Clean Architecture
+// 🏗️ Apna Ghar Jetpack Compose Clean Architecture
 // Adheres strictly to Domain-Driven Design (DDD) with a decoupled mock/backend repository system.
 // ==========================================
 
@@ -125,7 +125,7 @@ class MockProjectRepository : ProjectRepository { ... }
 class MockUserRepository : UserRepository { ... }
 class MockMessageRepository : MessageRepository { ... }
 class MockNotificationRepository : NotificationRepository { ... }`,
-    card: `package com.nestora.realestate.ui.components
+    card: `package com.apnaghar.realestate.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -148,11 +148,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.nestora.realestate.domain.model.Property
+import com.apnaghar.realestate.domain.model.Property
 
 /**
  * Material 3 Property Card for Indian Real-Estate Discovery.
- * Follows Nestora Design System tokens with zero-brokerage badges and instant visit CTA.
+ * Follows Apna Ghar Design System tokens with zero-brokerage badges and instant visit CTA.
  */
 @Composable
 fun PropertyCard(
@@ -281,50 +281,50 @@ fun PropertyCard(
         }
     }
 }`,
-    theme: `package com.nestora.realestate.ui.theme
+    theme: `package com.apnaghar.realestate.ui.theme
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val NestoraPrimary = Color(0xFF3949AB)
-val NestoraPrimaryDark = Color(0xFF283593)
-val NestoraAccent = Color(0xFFF4A62A)
-val NestoraBackground = Color(0xFFF7F8FA)
-val NestoraSurface = Color(0xFFFFFFFF)
-val NestoraSuccess = Color(0xFF2E9D63)
-val NestoraError = Color(0xFFD64545)
+val ApnaGharPrimary = Color(0xFF3949AB)
+val ApnaGharPrimaryDark = Color(0xFF283593)
+val ApnaGharAccent = Color(0xFFF4A62A)
+val ApnaGharBackground = Color(0xFFF7F8FA)
+val ApnaGharSurface = Color(0xFFFFFFFF)
+val ApnaGharSuccess = Color(0xFF2E9D63)
+val ApnaGharError = Color(0xFFD64545)
 
 private val LightColorScheme = lightColorScheme(
-    primary = NestoraPrimary,
+    primary = ApnaGharPrimary,
     onPrimary = Color.White,
     primaryContainer = Color(0xFFE8EAF6),
-    onPrimaryContainer = NestoraPrimaryDark,
-    secondary = NestoraAccent,
+    onPrimaryContainer = ApnaGharPrimaryDark,
+    secondary = ApnaGharAccent,
     onSecondary = Color(0xFF1C1B1F),
-    background = NestoraBackground,
-    surface = NestoraSurface,
+    background = ApnaGharBackground,
+    surface = ApnaGharSurface,
     onSurface = Color(0xFF1C1B1F),
-    error = NestoraError
+    error = ApnaGharError
 )
 
 @Composable
-fun NestoraRealEstateTheme(
+fun ApnaGharRealEstateTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
         colorScheme = LightColorScheme,
-        typography = NestoraTypography,
-        shapes = NestoraShapes,
+        typography = ApnaGharTypography,
+        shapes = ApnaGharShapes,
         content = content
     )
 }`,
-    viewmodel: `package com.nestora.realestate.ui.discovery
+    viewmodel: `package com.apnaghar.realestate.ui.discovery
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nestora.realestate.domain.model.Property
-import com.nestora.realestate.domain.repository.PropertyRepository
+import com.apnaghar.realestate.domain.model.Property
+import com.apnaghar.realestate.domain.repository.PropertyRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -376,7 +376,7 @@ class DiscoveryViewModel(
         _uiState.update { it.copy(filteredProperties = filtered) }
     }
 }`              ,
-    screen: `package com.nestora.realestate.presentation.discovery
+    screen: `package com.apnaghar.realestate.presentation.discovery
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -387,7 +387,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.nestora.realestate.ui.components.PropertyCard
+import com.apnaghar.realestate.ui.components.PropertyCard
 
 /**
  * Jetpack Compose Screen utilizing modern Material 3 Scaffold and StateFlow collection.

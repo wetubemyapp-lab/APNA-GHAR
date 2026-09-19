@@ -24,14 +24,14 @@ export const SavedSearchesModal: React.FC<SavedSearchesModalProps> = ({ onClose 
     bhk: string[];
     priceRange: [number, number];
   }>>(() => {
-    const stored = localStorage.getItem('nestora_saved_searches');
+    const stored = localStorage.getItem('apnaghar_saved_searches');
     return stored ? JSON.parse(stored) : [];
   });
 
   const handleDeleteSavedSearch = (id: string) => {
     const updated = savedSearches.filter(s => s.id !== id);
     setSavedSearches(updated);
-    localStorage.setItem('nestora_saved_searches', JSON.stringify(updated));
+    localStorage.setItem('apnaghar_saved_searches', JSON.stringify(updated));
     showToast('Saved search deleted', 'info');
   };
 
@@ -60,7 +60,7 @@ export const SavedSearchesModal: React.FC<SavedSearchesModalProps> = ({ onClose 
 
     const updated = [newSearch, ...savedSearches];
     setSavedSearches(updated);
-    localStorage.setItem('nestora_saved_searches', JSON.stringify(updated));
+    localStorage.setItem('apnaghar_saved_searches', JSON.stringify(updated));
     showToast('Current search saved successfully!', 'success');
   };
 

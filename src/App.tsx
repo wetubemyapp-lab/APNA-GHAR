@@ -8,6 +8,45 @@ import { ShortlistScreen } from './components/ShortlistScreen';
 import { MessagesScreen } from './components/MessagesScreen';
 import { AccountScreen } from './components/AccountScreen';
 import { OfflineBanner } from './components/OfflineBanner';
+import { SplashScreenModal } from './components/SplashScreenModal';
+import { OnboardingModal } from './components/OnboardingModal';
+import { useEffect, useState } from 'react';
+import { CheckCircle2, Info, XCircle, X } from 'lucide-react';
+
+const ToastHost: React.FC = () => {
+  const { toast } = useApp();
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (toast) {
+      setVisible(true);
+    } else {
+      setVisible(false);
+    }
+  }, [toast]);
+  if (!toast || !visible) return null;
+  const color =
+    toast.type === 'success'
+      ? 'bg-emerald-600'
+      : toast.type === 'error'
+      ? 'bg-rose-600'
+      : 'bg-slate-800';
+  const Icon = toast.type === 'success' ? CheckCircle2 : toast.type === 'error' ? XCircle : Info;
+  return (
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] max-w-[92vw] animate-in fade-in slide-in-from-bottom-4">
+      <div className={`${color} text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm font-medium min-w-[200px] max-w-md`}>
+        <Icon className="w-4 h-4 shrink-0" />
+        <span className="flex-1 leading-snug">{toast.message}</span>
+        <button
+          aria-label="Dismiss notification"
+          onClick={() => setVisible(false)}
+          className="opacity-70 hover:opacity-100 p-1 -mr-1"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // Modals
 import { PropertyDetailModal } from './components/PropertyDetailModal';
@@ -71,8 +110,68 @@ const MainLayout: React.FC = () => {
     isAboutModalOpen,
     setIsAboutModalOpen,
     isHelpSupportModalOpen,
-    setIsHelpSupportModalOpen
+    setIsHelpSupportModalOpen,
+    isSplashScreenVisible,
+    setIsSplashScreenVisible,
+    isOnboardingModalOpen,
+    setIsOnboardingModalOpen,
   } = useApp();
+
+  // First-launch: show splash screen if no record of prior launch
+  useEffect(() => {
+    const hasLaunched = localStorage.getItem('apnaghar_has_launched_before');
+    if (!hasLaunched) {
+      setIsSplashScreenVisible(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Global ESC key back-navigation (closes top-most modal/view)
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      // Order matters from most-nested to least
+      if (isComposeInspectorOpen) return setIsComposeInspectorOpen(false);
+      if (isScreenInventoryOpen) return setIsScreenInventoryOpen(false);
+      if (isHelpSupportModalOpen) return setIsHelpSupportModalOpen(false);
+      if (isAboutModalOpen) return setIsAboutModalOpen(false);
+      if (isSettingsModalOpen) return setIsSettingsModalOpen(false);
+      if (isManageListingModalOpen) return setIsManageListingModalOpen(false);
+      if (isMyListingsModalOpen) return setIsMyListingsModalOpen(false);
+      if (isNotificationCenterOpen) return setIsNotificationCenterOpen(false);
+      if (isEnquiryModalOpen) return setIsEnquiryModalOpen(false);
+      if (isScheduleVisitModalOpen) return setIsScheduleVisitModalOpen(false);
+      if (isCompareModalOpen) return setIsCompareModalOpen(false);
+      if (isAuthModalOpen) return setIsAuthModalOpen(false);
+      if (isCityModalOpen) return setIsCityModalOpen(false);
+      if (isPostPropertyModalOpen) return setIsPostPropertyModalOpen(false);
+      if (isFilterBottomSheetOpen) return setIsFilterBottomSheetOpen(false);
+      if (selectedLocality) return setSelectedLocality(null);
+      if (selectedProject) return setSelectedProject(null);
+      if (selectedProperty) return setSelectedProperty(null);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [
+    isComposeInspectorOpen, setIsComposeInspectorOpen,
+    isScreenInventoryOpen, setIsScreenInventoryOpen,
+    isHelpSupportModalOpen, setIsHelpSupportModalOpen,
+    isAboutModalOpen, setIsAboutModalOpen,
+    isSettingsModalOpen, setIsSettingsModalOpen,
+    isManageListingModalOpen, setIsManageListingModalOpen,
+    isMyListingsModalOpen, setIsMyListingsModalOpen,
+    isNotificationCenterOpen, setIsNotificationCenterOpen,
+    isEnquiryModalOpen, setIsEnquiryModalOpen,
+    isScheduleVisitModalOpen, setIsScheduleVisitModalOpen,
+    isCompareModalOpen, setIsCompareModalOpen,
+    isAuthModalOpen, setIsAuthModalOpen,
+    isCityModalOpen, setIsCityModalOpen,
+    isPostPropertyModalOpen, setIsPostPropertyModalOpen,
+    isFilterBottomSheetOpen, setIsFilterBottomSheetOpen,
+    selectedLocality, setSelectedLocality,
+    selectedProject, setSelectedProject,
+    selectedProperty, setSelectedProperty,
+  ]);
 
   const renderActiveScreen = () => {
     switch (activeTab) {
@@ -199,6 +298,15 @@ const MainLayout: React.FC = () => {
           onClose={() => setIsHelpSupportModalOpen(false)} 
         />
       )}
+
+      {/* Splash + Onboarding overlays */}
+      <SplashScreenModal />
+      {isOnboardingModalOpen && (
+        <OnboardingModal onClose={() => setIsOnboardingModalOpen(false)} />
+      )}
+
+      {/* Global Toast */}
+      <ToastHost />
     </div>
   );
 

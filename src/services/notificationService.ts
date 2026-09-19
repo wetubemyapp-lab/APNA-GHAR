@@ -54,7 +54,7 @@ export class NotificationService {
 
     // Simulate server register exchange delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    this.fcmToken = `fcm-token-nestora-${Math.random().toString(36).substr(2, 9)}`;
+    this.fcmToken = `fcm-token-apnaghar-${Math.random().toString(36).substr(2, 9)}`;
     console.log('[NotificationService] FCM Registration Token generated:', this.fcmToken);
     
     return this.fcmToken;

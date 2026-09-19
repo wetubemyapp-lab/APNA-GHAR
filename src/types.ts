@@ -230,8 +230,12 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  area: string;
   role: UserRole;
   avatar: string;
+  avatarUrl?: string;
+  password?: string; // stored locally only for demo purposes (hashed in production)
+  isLoggedIn: boolean;
   savedPropertyIds: string[];
   savedProjectIds?: string[];
   comparePropertyIds: string[];
@@ -243,7 +247,7 @@ export interface User {
 
 export type ActiveTab = 'home' | 'search' | 'shortlist' | 'messages' | 'account';
 
-export type AuthMode = 'login' | 'register' | 'otp';
+export type AuthMode = 'login' | 'register';
 
 export interface ScreenInventoryItem {
   id: number;
