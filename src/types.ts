@@ -96,6 +96,7 @@ export interface Property {
   isOwnerVerified: boolean;
   isFeatured: boolean;
   isAvailable: boolean;
+  status?: 'active' | 'pending' | 'draft' | 'closed';
   viewsCount: number;
   inquiryCount: number;
   savedCount: number;
@@ -232,6 +233,7 @@ export interface User {
   role: UserRole;
   avatar: string;
   savedPropertyIds: string[];
+  savedProjectIds?: string[];
   comparePropertyIds: string[];
   recentSearches: string[];
   postedProperties: Property[];

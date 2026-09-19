@@ -817,7 +817,10 @@ export const SearchScreen: React.FC = () => {
           {/* View Mode: Map vs List */}
           {viewMode === 'map' ? (
             <div className="h-[calc(100vh-230px)] rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative">
-              <MapView properties={filteredProperties} />
+              <MapView 
+                properties={filteredProperties} 
+                onToggleListView={() => setViewMode('list')} 
+              />
             </div>
           ) : (
             <>

@@ -19,6 +19,7 @@ import { ProjectDetailModal } from './components/ProjectDetailModal';
 import { LocalityDetailModal } from './components/LocalityDetailModal';
 import { ContactEnquiryModal } from './components/ContactEnquiryModal';
 import { ManageListingModal } from './components/ManageListingModal';
+import { MyListingsModal } from './components/MyListingsModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { SplashScreenModal } from './components/SplashScreenModal';
 import { OnboardingModal } from './components/OnboardingModal';
@@ -48,6 +49,8 @@ const MainApp: React.FC = () => {
     setScheduleVisitProperty,
     isPostPropertyModalOpen,
     setIsPostPropertyModalOpen,
+    isMyListingsModalOpen,
+    setIsMyListingsModalOpen,
     isCityModalOpen,
     setIsCityModalOpen,
     isFilterBottomSheetOpen,
@@ -257,10 +260,21 @@ const MainApp: React.FC = () => {
         />
       )}
 
-      {/* Screen 19: Post Property Modal */}
-      {isPostPropertyModalOpen && (
+      {/* Screen 19 & Screen 22: Post / Edit Property Modal */}
+      {(isPostPropertyModalOpen || (isEditListingModalOpen && editingProperty)) && (
         <PostPropertyModal 
-          onClose={() => setIsPostPropertyModalOpen(false)} 
+          initialProperty={editingProperty}
+          onClose={() => {
+            setIsPostPropertyModalOpen(false);
+            setIsEditListingModalOpen(false);
+          }} 
+        />
+      )}
+
+      {/* Screen 20: My Listings Modal */}
+      {isMyListingsModalOpen && (
+        <MyListingsModal 
+          onClose={() => setIsMyListingsModalOpen(false)} 
         />
       )}
 
@@ -270,15 +284,6 @@ const MainApp: React.FC = () => {
           property={managingProperty} 
           mode="manage"
           onClose={() => setIsManageListingModalOpen(false)} 
-        />
-      )}
-
-      {/* Screen 22: Edit Listing */}
-      {isEditListingModalOpen && editingProperty && (
-        <ManageListingModal 
-          property={editingProperty} 
-          mode="edit"
-          onClose={() => setIsEditListingModalOpen(false)} 
         />
       )}
 

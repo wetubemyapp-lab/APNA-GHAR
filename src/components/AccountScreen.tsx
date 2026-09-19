@@ -32,6 +32,7 @@ export const AccountScreen: React.FC = () => {
     currentUser, 
     callbackRequests, 
     setIsPostPropertyModalOpen,
+    setIsMyListingsModalOpen,
     setSelectedProperty,
     deleteProperty,
     selectedCity,
@@ -110,12 +111,20 @@ export const AccountScreen: React.FC = () => {
             <h2 className="font-extrabold text-base text-slate-900">My Listings ({userProperties.length})</h2>
             <p className="text-xs text-slate-500">Track inquiries, view leads, and manage your live advertisements</p>
           </div>
-          <button
-            onClick={() => setIsPostPropertyModalOpen(true)}
-            className="text-xs font-bold text-blue-600 hover:underline"
-          >
-            + Add New
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsMyListingsModalOpen(true)}
+              className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 font-bold text-xs hover:bg-blue-100 transition"
+            >
+              View All Tabs
+            </button>
+            <button
+              onClick={() => setIsPostPropertyModalOpen(true)}
+              className="text-xs font-bold text-blue-600 hover:underline"
+            >
+              + Add New
+            </button>
+          </div>
         </div>
 
         {userProperties.length === 0 ? (

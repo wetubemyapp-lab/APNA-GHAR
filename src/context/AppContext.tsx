@@ -90,6 +90,10 @@ interface AppContextType {
   savedProperties: Property[];
   toggleSaveProperty: (id: string) => void;
   isPropertySaved: (id: string) => boolean;
+  savedProjectIds: string[];
+  savedProjects: Project[];
+  toggleSaveProject: (id: string) => void;
+  isProjectSaved: (id: string) => boolean;
   
   // Comparison (Screen 12)
   comparePropertyIds: string[];
@@ -129,6 +133,8 @@ interface AppContextType {
   // Post Property & Management (Screens 19, 20, 21, 22)
   isPostPropertyModalOpen: boolean;
   setIsPostPropertyModalOpen: (open: boolean) => void;
+  isMyListingsModalOpen: boolean;
+  setIsMyListingsModalOpen: (open: boolean) => void;
   addProperty: (newProp: Omit<Property, 'id' | 'createdAt' | 'updatedAt' | 'viewsCount' | 'inquiryCount' | 'savedCount'>) => Property;
   deleteProperty: (id: string) => void;
   isManageListingModalOpen: boolean;
@@ -253,10 +259,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isProjectModalOpen, setIsProjectModalOpen] = useState<boolean>(false);
 
   // Filters State
-  const [filterState, setFilterState] = useState<FilterState>(() => ({
-    ...DEFAULT_FILTERS,
-    city: selectedCity.name
-  }));
+  const [filterState, setFilterState] = useState<FilterState>(() => {
+    const saved = localStorage.getItem('nestora_filters');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_FILTERS,
+          ...parsed,
+          city: selectedCity.name
+        };
+      } catch (e) {
+        console.error('Failed to parse saved filters', e);
+      }
+    }
+    return {
+      ...DEFAULT_FILTERS,
+      city: selectedCity.name
+    };
+  });
 
   // Modals & Bottom Sheets
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -269,6 +290,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [enquiryProperty, setEnquiryProperty] = useState<Property | null>(null);
   
   // Manage & Edit Listing
+  const [isMyListingsModalOpen, setIsMyListingsModalOpen] = useState<boolean>(false);
   const [isManageListingModalOpen, setIsManageListingModalOpen] = useState<boolean>(false);
   const [managingProperty, setManagingProperty] = useState<Property | null>(null);
   const [isEditListingModalOpen, setIsEditListingModalOpen] = useState<boolean>(false);
@@ -363,6 +385,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('nestora_notifs', JSON.stringify(notifications));
   }, [notifications]);
+
+  // Save filterState
+  useEffect(() => {
+    localStorage.setItem('nestora_filters', JSON.stringify(filterState));
+  }, [filterState]);
 
   // Filter properties logic
   const filteredProperties = useMemo(() => {
@@ -462,9 +489,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Recently Added
       if (filterState.recentlyAdded) {
         const dateCreated = new Date(prop.createdAt);
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 90);
-        if (dateCreated < thirtyDaysAgo) return false;
+        if (!isNaN(dateCreated.getTime())) {
+          const now = new Date();
+          const diffInDays = (now.getTime() - dateCreated.getTime()) / (1000 * 3600 * 24);
+          if (diffInDays > 365 && !prop.createdAt.includes('2026') && prop.createdAt !== 'Today') return false;
+        }
       }
 
       // Amenities match
@@ -574,6 +603,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const isPropertySaved = (id: string) => (currentUser.savedPropertyIds || []).includes(id);
+
+  // Saved Projects
+  const savedProjects = useMemo(() => {
+    return projects.filter(p => (currentUser.savedProjectIds || []).includes(p.id));
+  }, [projects, currentUser.savedProjectIds]);
+
+  const toggleSaveProject = (id: string) => {
+    const isSaved = (currentUser.savedProjectIds || []).includes(id);
+    const updated = isSaved 
+      ? (currentUser.savedProjectIds || []).filter(item => item !== id)
+      : [...(currentUser.savedProjectIds || []), id];
+
+    setCurrentUser(prev => ({ ...prev, savedProjectIds: updated }));
+    showToast(isSaved ? 'Project removed from Shortlist' : 'Project saved to Shortlist! ❤️', isSaved ? 'info' : 'success');
+  };
+
+  const isProjectSaved = (id: string) => (currentUser.savedProjectIds || []).includes(id);
 
   // Compare
   const compareProperties = useMemo(() => {
@@ -892,6 +938,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAuthModalOpen(false);
     setIsEnquiryModalOpen(false);
     setIsManageListingModalOpen(false);
+    setIsMyListingsModalOpen(false);
     setIsEditListingModalOpen(false);
     setIsNotificationCenterOpen(false);
     setIsProjectModalOpen(false);
@@ -973,15 +1020,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsPostPropertyModalOpen(true);
         break;
       case 20: // 20. My Listings
-        setActiveTab('account');
+        setIsMyListingsModalOpen(true);
         break;
       case 21: // 21. Listing Detail / Manage Listing
-        setManagingProperty(properties[0] || INITIAL_PROPERTIES[0]);
+        setManagingProperty(currentUser.postedProperties?.[0] || properties[0] || INITIAL_PROPERTIES[0]);
         setIsManageListingModalOpen(true);
         break;
       case 22: // 22. Edit Listing
-        setEditingProperty(properties[0] || INITIAL_PROPERTIES[0]);
-        setIsEditListingModalOpen(true);
+        setEditingProperty(currentUser.postedProperties?.[0] || properties[0] || INITIAL_PROPERTIES[0]);
+        setIsPostPropertyModalOpen(true);
         break;
       case 23: // 23. Messages
         setActiveTab('messages');
@@ -1047,6 +1094,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         savedProperties,
         toggleSaveProperty,
         isPropertySaved,
+        savedProjectIds: currentUser.savedProjectIds || [],
+        savedProjects,
+        toggleSaveProject,
+        isProjectSaved,
         comparePropertyIds: currentUser.comparePropertyIds || [],
         compareProperties,
         toggleCompareProperty,
@@ -1069,6 +1120,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         openEnquiryModal,
         isPostPropertyModalOpen,
         setIsPostPropertyModalOpen,
+        isMyListingsModalOpen,
+        setIsMyListingsModalOpen,
         addProperty,
         deleteProperty,
         isManageListingModalOpen,

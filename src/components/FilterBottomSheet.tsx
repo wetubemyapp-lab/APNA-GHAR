@@ -583,22 +583,25 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({ onClose })
               </label>
 
               {/* Recently Added */}
-              <label className="flex items-center justify-between cursor-pointer group">
+              <label className="flex items-center justify-between cursor-pointer group p-1.5 rounded-xl hover:bg-slate-100/70 transition-colors">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-xl bg-indigo-100 text-indigo-700">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-slate-900 block text-xs">Recently Added</span>
-                    <span className="text-[10px] text-slate-500">Listings added within the last 30 days</span>
+                    <span className="font-bold text-slate-900 block text-xs">Recently Added Properties</span>
+                    <span className="text-[10px] text-slate-500">Show newly listed properties</span>
                   </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={filterState.recentlyAdded}
-                  onChange={(e) => updateFilter('recentlyAdded', e.target.checked)}
-                  className="w-5 h-5 accent-[#3949AB] rounded-lg cursor-pointer"
-                />
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filterState.recentlyAdded || false}
+                    onChange={(e) => updateFilter('recentlyAdded', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3949AB]"></div>
+                </div>
               </label>
 
             </div>
