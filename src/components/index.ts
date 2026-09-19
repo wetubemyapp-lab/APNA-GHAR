@@ -30,3 +30,4 @@ export { TopAppBar } from './TopAppBar';
 export { SkeletonLoader } from './SkeletonLoader';
 export { ApiErrorState } from './ApiErrorState';
 export { ApnaGharLogo } from './ApnaGharLogo';
+export { SmartImage } from './SmartImage';

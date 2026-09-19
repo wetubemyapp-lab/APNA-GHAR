@@ -18,7 +18,8 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   return (
     <button
       disabled={disabled || loading}
-      className={`px-5 py-3 rounded-2xl bg-[#3949AB] hover:bg-[#283593] text-white text-sm font-extrabold shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none ${className}`}
+      aria-label={label || (typeof children === 'string' ? children : undefined)}
+      className={`px-5 py-3 min-h-[48px] rounded-2xl bg-[#3949AB] hover:bg-[#283593] text-white text-sm font-extrabold shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none ${className}`}
       {...props}
     >
       {loading ? (

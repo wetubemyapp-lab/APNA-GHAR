@@ -352,9 +352,37 @@ export const PostPropertyModal: React.FC<PostPropertyModalProps> = ({ initialPro
       showToast('Please select locality', 'error');
       return;
     }
-    if (step === 6 && photos.length === 0) {
-      showToast('Please add at least 1 photo', 'error');
-      return;
+    if (step === 4) {
+      if (carpetArea <= 0 || superArea <= 0) {
+        showToast('Area size must be greater than 0 sq.ft', 'error');
+        return;
+      }
+      if (carpetArea > superArea) {
+        showToast('Carpet area cannot exceed super built-up area', 'error');
+        return;
+      }
+    }
+    if (step === 5) {
+      if (!priceInLakhs || priceInLakhs <= 0) {
+        showToast('Please enter a valid positive price amount', 'error');
+        return;
+      }
+    }
+    if (step === 6) {
+      if (photos.length === 0) {
+        showToast('Please add at least 1 photo', 'error');
+        return;
+      }
+      if (photos.length > 10) {
+        showToast('Maximum 10 photos allowed', 'error');
+        return;
+      }
+    }
+    if (step === 7) {
+      // Secure text sanitization to strip any potential HTML elements for XSS mitigation
+      const cleanText = (str: string) => str.replace(/<[^>]*>/g, '').trim();
+      setTitle(cleanText(title));
+      setDescription(cleanText(description));
     }
     setStep(prev => Math.min(prev + 1, 10));
   };

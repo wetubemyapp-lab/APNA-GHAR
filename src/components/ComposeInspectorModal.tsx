@@ -15,10 +15,116 @@ interface ComposeInspectorModalProps {
 }
 
 export const ComposeInspectorModal: React.FC<ComposeInspectorModalProps> = ({ onClose }) => {
-  const [activeFile, setActiveFile] = useState<'theme' | 'card' | 'viewmodel' | 'screen'>('card');
+  const [activeFile, setActiveFile] = useState<'architecture' | 'card' | 'screen' | 'theme' | 'viewmodel'>('architecture');
   const [copied, setCopied] = useState(false);
 
   const codeSnippets: Record<string, string> = {
+    architecture: `// ==========================================
+// 🏗️ Apna Ghar Jetpack Compose Clean Architecture
+// Adheres strictly to Domain-Driven Design (DDD) with a decoupled mock/backend repository system.
+// ==========================================
+
+// 📂 Android Module Structure
+// ├── 📂 data/                           # Repositories & Local/Remote datasources
+// │   ├── 📂 repository/                 # Mock & API Implementations (MockPropertyRepository, etc.)
+// │   ├── 📂 remote/                     # Ktor REST Client & API payloads
+// │   └── 📂 local/                      # Room Database local cache & DataStore preferences
+// ├── 📂 domain/                         # Core Entities, Repo Contracts & UseCases
+// │   ├── 📂 model/                      # Immutable Data Classes
+// │   ├── 📂 repository/                 # Interface Abstractions
+// │   └── 📂 usecase/                    # Single-purpose self-contained operations
+// ├── 📂 presentation/                   # Reactive UI Presenters & MVI / MVVM ViewModels
+// │   ├── 📂 state/                      # Unified Sealed UIState models
+// └── 📂 navigation/                      # Safe Compose Navigation Graph Destinations
+
+// ==========================================
+// 🎨 1. UNIFIED UI STATE ARCHETYPE (M3)
+// ==========================================
+sealed interface UiState<out T> {
+    object Loading : UiState<Nothing>
+    data class Success<out T>(val data: T) : UiState<T>
+    object Empty : UiState<Nothing>
+    data class Error(val exception: Throwable, val userMessage: String) : UiState<Nothing>
+    object Offline : UiState<Nothing>
+}
+
+// ==========================================
+// 🗺️ 2. COMPOSE NAVIGATION GRAPH ROUTES
+// ==========================================
+sealed class Screen(val route: String) {
+    object Home : Screen("home")
+    object Search : Screen("search")
+    object Results : Screen("results")
+    object PropertyDetail : Screen("property/{id}") {
+        fun createRoute(id: String) = "property/$id"
+    }
+    object ProjectDetail : Screen("project/{id}") {
+        fun createRoute(id: String) = "project/$id"
+    }
+    object LocalityDetail : Screen("locality/{id}") {
+        fun createRoute(id: String) = "locality/$id"
+    }
+    object MapExplorer : Screen("map")
+    object Shortlist : Screen("shortlist")
+    object CompareListings : Screen("compare")
+    object ContactAdvertiser : Screen("contact/{id}") {
+        fun createRoute(id: String) = "contact/$id"
+    }
+    object RequestCallback : Screen("callback/{id}") {
+        fun createRoute(id: String) = "callback/$id"
+    }
+    object Login : Screen("login")
+    object Register : Screen("register")
+    object OtpVerification : Screen("otp")
+    object PostProperty : Screen("post-property")
+    object MyListings : Screen("my-listings")
+    object EditListing : Screen("edit-listing/{id}") {
+        fun createRoute(id: String) = "edit-listing/$id"
+    }
+    object MessagesHub : Screen("messages")
+    object ChatRoom : Screen("chat/{id}") {
+        fun createRoute(id: String) = "chat/$id"
+    }
+    object NotificationsList : Screen("notifications")
+    object AccountSettings : Screen("account")
+    object GeneralSettings : Screen("settings")
+    object HelpCenter : Screen("help")
+    object LegalCompliance : Screen("legal")
+}
+
+// ==========================================
+// 🗄️ 3. DECOUPLED BACKEND-READY REPOSITORIES
+// ==========================================
+interface PropertyRepository {
+    suspend fun getProperties(): List<Property>
+    suspend fun getProperty(id: String): Property?
+    suspend fun publishProperty(property: Property): Boolean
+}
+
+interface ProjectRepository {
+    suspend fun getProjects(): List<Project>
+    suspend fun getProject(id: String): Project?
+}
+
+interface UserRepository {
+    suspend fun getProfile(userId: String): User?
+    suspend fun updateProfile(userId: String, user: User): Boolean
+}
+
+interface MessageRepository {
+    suspend fun getChats(): List<ChatThread>
+}
+
+interface NotificationRepository {
+    suspend fun getNotifications(): List<NotificationItem>
+}
+
+// Concrete Prototype Implementations (easily swapped with Firebase/Supabase/REST later)
+class MockPropertyRepository : PropertyRepository { ... }
+class MockProjectRepository : ProjectRepository { ... }
+class MockUserRepository : UserRepository { ... }
+class MockMessageRepository : MessageRepository { ... }
+class MockNotificationRepository : NotificationRepository { ... }`,
     card: `package com.apnaghar.realestate.ui.components
 
 import androidx.compose.animation.*
@@ -269,6 +375,76 @@ class DiscoveryViewModel(
         }
         _uiState.update { it.copy(filteredProperties = filtered) }
     }
+}`              ,
+    screen: `package com.apnaghar.realestate.presentation.discovery
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.apnaghar.realestate.ui.components.PropertyCard
+
+/**
+ * Jetpack Compose Screen utilizing modern Material 3 Scaffold and StateFlow collection.
+ * Renders the primary discovery feed with search integration and property lists.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DiscoveryScreen(
+    viewModel: DiscoveryViewModel,
+    onPropertyClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Scaffold(
+        topBar = {
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = { viewModel.onSearchQueryChanged(it) },
+                onSearch = {},
+                active = false,
+                onActiveChange = {},
+                placeholder = { Text("Search localities, builders, apartments...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {}
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Text(
+                    text = "Recommended Properties in \${uiState.selectedCity}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+
+            items(uiState.filteredProperties) { property ->
+                PropertyCard(
+                    property = property,
+                    isSaved = false,
+                    onSaveToggle = { /* Toggle saved state */ },
+                    onCardClick = { onPropertyClick(property.id) },
+                    onScheduleVisit = { /* Request instant site visit */ }
+                )
+            }
+        }
+    }
 }`
   };
 
@@ -313,8 +489,18 @@ class DiscoveryViewModel(
         {/* Tab File Selector */}
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800 bg-slate-900 text-xs overflow-x-auto no-scrollbar">
           <button
+            onClick={() => setActiveFile('architecture')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
+              activeFile === 'architecture' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Architecture.md</span>
+          </button>
+
+          <button
             onClick={() => setActiveFile('card')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
               activeFile === 'card' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -323,8 +509,18 @@ class DiscoveryViewModel(
           </button>
 
           <button
+            onClick={() => setActiveFile('screen')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
+              activeFile === 'screen' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <FileCode className="w-3.5 h-3.5" />
+            <span>DiscoveryScreen.kt</span>
+          </button>
+
+          <button
             onClick={() => setActiveFile('theme')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
               activeFile === 'theme' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -334,7 +530,7 @@ class DiscoveryViewModel(
 
           <button
             onClick={() => setActiveFile('viewmodel')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
               activeFile === 'viewmodel' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >

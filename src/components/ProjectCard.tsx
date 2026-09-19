@@ -1,6 +1,7 @@
 import React from 'react';
 import { Project } from '../types';
 import { useApp } from '../context/AppContext';
+import { SmartImage } from './SmartImage';
 import { CheckCircle, Building2, ArrowRight } from 'lucide-react';
 
 interface ProjectCardProps {
@@ -23,11 +24,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       className={`group bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col ${className}`}
     >
       <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
-        <img 
+        <SmartImage 
           src={project.image} 
           alt={project.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-          loading="lazy"
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105" 
+          roundedClass="rounded-none"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
         
